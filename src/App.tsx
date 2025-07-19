@@ -60,7 +60,10 @@ function App() {
   if (showLogin && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-6 bg-slate-800 border-gold/20">
+        <Card 
+          className="w-full max-w-md p-6 bg-slate-800"
+          style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }}
+        >
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gold mb-2">🔐 Accesso Amministratore</h2>
             <p className="text-slate-300">Inserisci la password per accedere al pannello admin</p>
@@ -146,7 +149,8 @@ function App() {
           onClick={() => setShowLogin(true)}
           variant="outline"
           size="sm"
-          className="bg-slate-800/90 backdrop-blur-sm border-gold/20 text-gold hover:bg-gold hover:text-slate-900"
+          className="bg-slate-800/90 backdrop-blur-sm text-gold hover:bg-gold hover:text-slate-900"
+          style={{ borderColor: 'rgba(212, 175, 55, 0.2)', color: '#D4AF37' }}
         >
           <Settings className="h-4 w-4 mr-2" />
           Admin

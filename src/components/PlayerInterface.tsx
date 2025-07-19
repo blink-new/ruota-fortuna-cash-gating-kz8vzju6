@@ -142,6 +142,7 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
           size="icon"
           onClick={() => setSoundEnabled(!soundEnabled)}
           className="border-gold text-gold hover:bg-gold hover:text-slate-900"
+          style={{ borderColor: '#D4AF37', color: '#D4AF37' }}
         >
           {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
         </Button>
@@ -262,7 +263,10 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
 
           {/* Last Result */}
           {lastResult && (
-            <Card className="mt-6 p-6 bg-slate-800/50 border-gold/20 backdrop-blur-sm">
+            <Card 
+              className="mt-6 p-6 bg-slate-800/50 backdrop-blur-sm"
+              style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }}
+            >
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gold mb-2">Ultimo Risultato</h3>
                 <div className="text-2xl font-bold text-white mb-2">
@@ -280,7 +284,10 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
 
         {/* Recent Wins Sidebar */}
         <div className="space-y-6">
-          <Card className="p-6 bg-slate-800/50 border-gold/20 backdrop-blur-sm">
+          <Card 
+            className="p-6 bg-slate-800/50 backdrop-blur-sm"
+            style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }}
+          >
             <h3 className="text-xl font-bold text-gold mb-4 text-center">🏆 Ultime Vincite</h3>
             
             {recentWins.length === 0 ? (
@@ -291,14 +298,20 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
                   <div
                     key={spin.id}
                     className={`p-3 rounded-lg border ${
-                      index === 0 ? 'bg-gold/10 border-gold/30' : 'bg-slate-700/50 border-slate-600'
+                      index === 0 ? 'border-slate-600' : 'bg-slate-700/50 border-slate-600'
                     }`}
+                  style={index === 0 ? { 
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)', 
+                    borderColor: 'rgba(212, 175, 55, 0.3)' 
+                  } : {}}
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-white">{spin.outcome}</span>
-                      <Badge variant={index === 0 ? 'default' : 'secondary'} className={
-                        index === 0 ? 'bg-gold text-slate-900' : ''
-                      }>
+                      <Badge 
+                        variant={index === 0 ? 'default' : 'secondary'} 
+                        className={index === 0 ? 'text-slate-900' : ''}
+                        style={index === 0 ? { backgroundColor: '#D4AF37' } : {}}
+                      >
                         {index === 0 ? 'Nuovo!' : new Date(spin.timestamp).toLocaleTimeString()}
                       </Badge>
                     </div>
@@ -309,7 +322,10 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
           </Card>
 
           {/* Simple Stats */}
-          <Card className="p-6 bg-slate-800/50 border-gold/20 backdrop-blur-sm">
+          <Card 
+            className="p-6 bg-slate-800/50 backdrop-blur-sm"
+            style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }}
+          >
             <h3 className="text-lg font-bold text-gold mb-4 text-center">📊 Le Tue Statistiche</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
