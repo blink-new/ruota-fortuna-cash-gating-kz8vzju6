@@ -5,7 +5,7 @@ import { Badge } from './ui/badge'
 import { Volume2, VolumeX, TrendingUp, Coins, Target, Zap } from 'lucide-react'
 import { GameState, SpinResult } from '../types/game'
 import { performSpin } from '../utils/gameLogic'
-import { FortuneWheel } from './FortuneWheel'
+import { SlotMachine } from './SlotMachine'
 import { prizes } from '../data/prizes'
 
 interface PlayerInterfaceProps {
@@ -146,9 +146,9 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div className="text-center md:text-left">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent mb-2">
-              🎰 Ruota della Fortuna
+              🎰 Slot Machine
             </h1>
-            <p className="text-slate-300 text-lg">Gira la ruota e vinci fantastici premi!</p>
+            <p className="text-slate-300 text-lg">Gira la slot e vinci fantastici premi!</p>
           </div>
           
           <div className="flex items-center gap-4">
@@ -184,31 +184,19 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Main Game Area */}
           <div className="xl:col-span-2 space-y-8">
-            {/* Wheel Section */}
+            {/* Slot Machine Section */}
             <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
               <CardContent className="p-8">
                 <div className="flex flex-col items-center space-y-8">
-                  {/* Modern Wheel */}
-                  <div className="relative">
-                    <FortuneWheel
-                      cash={gameState.cashRegister}
-                      onSpinComplete={setRotation}
-                      isSpinning={isSpinning}
-                      onSpin={handleSpin}
-                    />
-                    
-                    {/* Pulse effect when not spinning */}
-                    {!isSpinning && (
-                      <div className="absolute inset-0 rounded-full border-2 border-yellow-500/30 animate-pulse"></div>
-                    )}
-                  </div>
-
-                  {/* Clickable instruction */}
-                  {!isSpinning && (
-                    <p className="text-yellow-400 text-sm font-medium animate-bounce">
-                      👆 Clicca sulla ruota per girare!
-                    </p>
-                  )}
+                  {/* Slot Machine */}
+                  <SlotMachine
+                    cash={gameState.cashRegister}
+                    onSpinComplete={(result) => {
+                      // This will be handled by the SlotMachine's own logic
+                    }}
+                    isSpinning={isSpinning}
+                    onSpin={handleSpin}
+                  />
 
                   {/* Alternative Spin Button */}
                   <Button
@@ -225,7 +213,7 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
                     ) : (
                       <div className="flex items-center gap-3">
                         <Zap className="h-6 w-6" />
-                        GIRA LA RUOTA - €2
+                        GIRA LA SLOT - €2
                       </div>
                     )}
                   </Button>
@@ -329,7 +317,7 @@ export function PlayerInterface({ gameState, onGameStateChange }: PlayerInterfac
                 {recentWins.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-slate-400 mb-2">Nessuna vincita ancora...</p>
-                    <p className="text-slate-500 text-sm">Gira la ruota per iniziare!</p>
+                    <p className="text-slate-500 text-sm">Gira la slot per iniziare!</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
