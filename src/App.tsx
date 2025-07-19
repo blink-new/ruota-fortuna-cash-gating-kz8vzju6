@@ -1,179 +1,165 @@
-import React, { useState, useCallback } from 'react';
-import { FortuneWheel } from './components/FortuneWheel';
-import { CashRegister } from './components/CashRegister';
-import { PrizeList } from './components/PrizeList';
-import { SpinHistory } from './components/SpinHistory';
-import { GameControls } from './components/GameControls';
-import { performSpin } from './utils/gameLogic';
-import { GameState } from './types/game';
-import { Toaster } from './components/ui/toaster';
-import { useToast } from './hooks/use-toast';
+import React, { useState, useEffect } from 'react'
+import { Button } from './components/ui/button'
+import { Card } from './components/ui/card'
+import { Badge } from './components/ui/badge'
+import { Settings, User, LogOut } from 'lucide-react'
+import { PlayerInterface } from './components/PlayerInterface'
+import { AdminInterface } from './components/AdminInterface'
+import { GameState } from './types/game'
+import { Toaster } from './components/ui/toaster'
 
 function App() {
-  const { toast } = useToast();
-  
   const [gameState, setGameState] = useState<GameState>({
-    cash: 0,
+    cashRegister: 0,
     totalSpins: 0,
-    totalProfit: 0,
     spinHistory: [],
-    isSpinning: false,
-    lastResult: null
-  });
+    currentSeed: Math.floor(Math.random() * 1000000)
+  })
 
-  const [wheelRotation, setWheelRotation] = useState(0);
+  const [isAdminMode, setIsAdminMode] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [adminPassword, setAdminPassword] = useState('')
+  const [showLogin, setShowLogin] = useState(false)
 
-  const handleSpin = useCallback(() => {
-    if (gameState.isSpinning) return;
-
-    setGameState(prev => ({ ...prev, isSpinning: true }));
-
-    // Perform the spin calculation
-    const result = performSpin(gameState.cash);
-    
-    // Calculate wheel rotation for animation
-    const baseRotation = 1440; // 4 full rotations
-    const randomExtra = Math.random() * 360;
-    const finalRotation = wheelRotation + baseRotation + randomExtra;
-    
-    setWheelRotation(finalRotation);
-
-    // Show result after animation completes
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        cash: result.cashAfter,
-        totalSpins: prev.totalSpins + 1,
-        totalProfit: prev.totalProfit + result.profit,
-        spinHistory: [...prev.spinHistory, result],
-        isSpinning: false,
-        lastResult: result
-      }));
-
-      // Show toast notification
-      if (result.outcome === 'Miss ❌') {
-        toast({
-          title: "Miss! ❌",
-          description: `Nessun premio. Profitto: €${result.profit.toFixed(2)}`,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: `Hai vinto! ${result.outcome}`,
-          description: `Profitto: €${result.profit.toFixed(2)}`,
-          variant: "default"
-        });
+  // Load game state from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('fortuneWheelGameState')
+    if (savedState) {
+      try {
+        setGameState(JSON.parse(savedState))
+      } catch (error) {
+        console.error('Error loading saved game state:', error)
       }
-    }, 3000);
-  }, [gameState.cash, gameState.isSpinning, wheelRotation, toast]);
+    }
+  }, [])
 
-  const handleReset = useCallback(() => {
-    if (gameState.isSpinning) return;
-    
-    setGameState({
-      cash: 0,
-      totalSpins: 0,
-      totalProfit: 0,
-      spinHistory: [],
-      isSpinning: false,
-      lastResult: null
-    });
-    setWheelRotation(0);
-    
-    toast({
-      title: "Gioco resettato",
-      description: "Tutti i dati sono stati azzerati",
-      variant: "default"
-    });
-  }, [gameState.isSpinning, toast]);
+  // Save game state to localStorage
+  useEffect(() => {
+    localStorage.setItem('fortuneWheelGameState', JSON.stringify(gameState))
+  }, [gameState])
 
-  const handleWheelSpinComplete = useCallback((rotation: number) => {
-    setWheelRotation(rotation);
-  }, []);
+  const handleAdminLogin = () => {
+    // Simple password check - in production, use proper authentication
+    if (adminPassword === 'admin123') {
+      setIsAuthenticated(true)
+      setIsAdminMode(true)
+      setShowLogin(false)
+      setAdminPassword('')
+    } else {
+      alert('Password errata!')
+    }
+  }
 
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-primary mb-2">
-              🎰 Ruota della Fortuna
-            </h1>
-            <p className="text-muted-foreground">
-              Algoritmo Cash-Gating • Profitto Garantito
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    setIsAdminMode(false)
+    setShowLogin(false)
+  }
+
+  // Login Modal
+  if (showLogin && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md p-6 bg-slate-800 border-gold/20">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gold mb-2">🔐 Accesso Amministratore</h2>
+            <p className="text-slate-300">Inserisci la password per accedere al pannello admin</p>
+          </div>
+          
+          <div className="space-y-4">
+            <input
+              type="password"
+              placeholder="Password amministratore"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+              className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-gold focus:outline-none"
+            />
+            
+            <div className="flex gap-3">
+              <Button 
+                onClick={handleAdminLogin}
+                className="flex-1 bg-gold hover:bg-gold/90 text-slate-900"
+              >
+                Accedi
+              </Button>
+              <Button 
+                onClick={() => setShowLogin(false)}
+                variant="outline"
+                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                Annulla
+              </Button>
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
+            <p className="text-xs text-slate-400 text-center">
+              💡 Password demo: <span className="font-mono text-gold">admin123</span>
             </p>
           </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // Admin Interface
+  if (isAdminMode && isAuthenticated) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-50 flex gap-2">
+          <Button
+            onClick={() => setIsAdminMode(false)}
+            variant="outline"
+            size="sm"
+            className="bg-white/90 backdrop-blur-sm"
+          >
+            <User className="h-4 w-4 mr-2" />
+            Vista Giocatore
+          </Button>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            size="sm"
+            className="bg-white/90 backdrop-blur-sm"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
         </div>
-      </header>
+        
+        <AdminInterface 
+          gameState={gameState} 
+          onGameStateChange={setGameState} 
+        />
+        <Toaster />
+      </>
+    )
+  }
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Wheel and Controls */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card/50 backdrop-blur-sm rounded-lg p-6 border border-border">
-              <FortuneWheel
-                cash={gameState.cash}
-                onSpinComplete={handleWheelSpinComplete}
-                isSpinning={gameState.isSpinning}
-              />
-            </div>
-            
-            <GameControls
-              onSpin={handleSpin}
-              onReset={handleReset}
-              isSpinning={gameState.isSpinning}
-              cash={gameState.cash}
-              lastResult={gameState.lastResult?.outcome || null}
-            />
-          </div>
+  // Player Interface (default)
+  return (
+    <>
+      {/* Admin Access Button */}
+      <div className="fixed top-4 right-4 z-50">
+        <Button
+          onClick={() => setShowLogin(true)}
+          variant="outline"
+          size="sm"
+          className="bg-slate-800/90 backdrop-blur-sm border-gold/20 text-gold hover:bg-gold hover:text-slate-900"
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Admin
+        </Button>
+      </div>
 
-          {/* Middle Column - Cash Register and Prize List */}
-          <div className="lg:col-span-1 space-y-6">
-            <CashRegister
-              cash={gameState.cash}
-              totalSpins={gameState.totalSpins}
-              totalProfit={gameState.totalProfit}
-              lastProfit={gameState.lastResult?.profit}
-            />
-            
-            <PrizeList cash={gameState.cash} />
-          </div>
-
-          {/* Right Column - History and Stats */}
-          <div className="lg:col-span-1 space-y-6">
-            <SpinHistory history={gameState.spinHistory} />
-            
-            {/* Algorithm Info */}
-            <div className="bg-card border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-primary mb-3">
-                Come Funziona
-              </h3>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>• Ogni spin costa €2 e viene aggiunto alla cassa</p>
-                <p>• I premi si sbloccano solo quando la cassa raggiunge il loro prezzo di vendita</p>
-                <p>• Se vinci, paghi solo il costo vivo del premio</p>
-                <p>• Il margine deriva dall'accumulo in cassa e dal markup sui premi</p>
-                <p>• La cassa non può mai andare sotto €0</p>
-              </div>
-              
-              {gameState.spinHistory.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-border">
-                  <div className="text-xs text-muted-foreground">
-                    <div>Seed ultimo spin: {gameState.lastResult?.seed.slice(-8)}</div>
-                    <div>Timestamp: {gameState.lastResult ? new Date(gameState.lastResult.timestamp).toLocaleString('it-IT') : 'N/A'}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </main>
-
+      <PlayerInterface 
+        gameState={gameState} 
+        onGameStateChange={setGameState} 
+      />
       <Toaster />
-    </div>
-  );
+    </>
+  )
 }
 
-export default App;
+export default App
