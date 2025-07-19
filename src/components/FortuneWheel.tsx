@@ -6,9 +6,10 @@ interface FortuneWheelProps {
   cash: number;
   onSpinComplete: (rotation: number) => void;
   isSpinning: boolean;
+  onSpin?: () => void;
 }
 
-export function FortuneWheel({ cash, onSpinComplete, isSpinning }: FortuneWheelProps) {
+export function FortuneWheel({ cash, onSpinComplete, isSpinning, onSpin }: FortuneWheelProps) {
   const wheelRef = useRef<SVGSVGElement>(null);
   const [rotation, setRotation] = useState(0);
 
@@ -52,10 +53,11 @@ export function FortuneWheel({ cash, onSpinComplete, isSpinning }: FortuneWheelP
           width="320"
           height="320"
           viewBox="0 0 320 320"
-          className={`transform transition-transform duration-3000 ease-out ${isSpinning ? 'wheel-spin' : ''}`}
+          className={`transform transition-transform duration-3000 ease-out cursor-pointer hover:scale-105 transition-transform ${isSpinning ? 'wheel-spin' : ''} ${!isSpinning ? 'hover:drop-shadow-2xl' : ''}`}
           style={{
             '--final-rotation': `${rotation}deg`
           } as React.CSSProperties}
+          onClick={onSpin && !isSpinning ? onSpin : undefined}
         >
           {/* Outer ring */}
           <circle
