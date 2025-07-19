@@ -5,6 +5,9 @@ import { Badge } from './ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
 import { Separator } from './ui/separator'
 import { ScrollArea } from './ui/scroll-area'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { Alert, AlertDescription } from './ui/alert'
 import { 
   Settings, 
   TrendingUp, 
@@ -19,7 +22,12 @@ import {
   Target,
   Zap,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Edit3,
+  Save,
+  X,
+  Plus,
+  Trash2
 } from 'lucide-react'
 import { GameState } from '../types/game'
 import { prizes } from '../data/prizes'
@@ -31,6 +39,9 @@ interface AdminInterfaceProps {
 
 export function AdminInterface({ gameState, onGameStateChange }: AdminInterfaceProps) {
   const [selectedTab, setSelectedTab] = useState('overview')
+  const [isEditingCash, setIsEditingCash] = useState(false)
+  const [newCashAmount, setNewCashAmount] = useState('')
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
 
   // Calculate statistics
   const totalRevenue = gameState.totalSpins * 2 // €2 per spin
@@ -67,6 +78,12 @@ export function AdminInterface({ gameState, onGameStateChange }: AdminInterfaceP
   const recentActivity = gameState.spinHistory.slice(-10).reverse()
 
   const handleReset = () => {
+    if (!showResetConfirm) {
+      setShowResetConfirm(true)
+      setTimeout(() => setShowResetConfirm(false), 10000) // Auto-cancel after 10 seconds
+      return
+    }
+    
     const resetState: GameState = {
       cashRegister: 0,
       totalSpins: 0,
@@ -74,6 +91,51 @@ export function AdminInterface({ gameState, onGameStateChange }: AdminInterfaceP
       currentSeed: Math.floor(Math.random() * 1000000)
     }
     onGameStateChange(resetState)
+    setShowResetConfirm(false)
+  }
+
+  const handleCashEdit = () => {
+    if (isEditingCash) {
+      const amount = parseFloat(newCashAmount)
+      if (!isNaN(amount) && amount >= 0) {
+        onGameStateChange({
+          ...gameState,
+          cashRegister: amount
+        })
+      }
+      setIsEditingCash(false)
+      setNewCashAmount('')
+    } else {
+      setIsEditingCash(true)
+      setNewCashAmount(gameState.cashRegister.toString())
+    }
+  }
+
+  const addTestSpins = (count: number) => {
+    const newSpins = []
+    let currentCash = gameState.cashRegister
+    
+    for (let i = 0; i < count; i++) {
+      currentCash += 2 // Add spin revenue
+      const spin = {
+        id: `test-spin-${Date.now()}-${i}`,
+        outcome: 'Miss ❌',
+        timestamp: Date.now() + i,
+        seed: Math.floor(Math.random() * 1000000),
+        cashBefore: currentCash - 2,
+        cashAfter: currentCash,
+        revenue: 2,
+        cost: 0
+      }
+      newSpins.push(spin)
+    }
+    
+    onGameStateChange({
+      ...gameState,
+      cashRegister: currentCash,
+      totalSpins: gameState.totalSpins + count,
+      spinHistory: [...gameState.spinHistory, ...newSpins]
+    })
   }
 
   const exportData = () => {
@@ -115,9 +177,49 @@ export function AdminInterface({ gameState, onGameStateChange }: AdminInterfaceP
               <Download className="h-4 w-4" />
               Esporta Dati
             </Button>
-            <Button onClick={handleReset} variant="destructive" className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Reset Sistema
+            
+            {/* Test Data Buttons */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => addTestSpins(10)} 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1 hover:bg-green-50"
+              >
+                <Plus className="h-3 w-3" />
+                +10 Test
+              </Button>
+              <Button 
+                onClick={() => addTestSpins(50)} 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1 hover:bg-green-50"
+              >
+                <Plus className="h-3 w-3" />
+                +50 Test
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={handleReset} 
+              variant={showResetConfirm ? "destructive" : "outline"}
+              className={`flex items-center gap-2 transition-all duration-200 ${
+                showResetConfirm 
+                  ? 'animate-pulse border-red-500 bg-red-500 text-white' 
+                  : 'hover:bg-red-50 hover:border-red-300'
+              }`}
+            >
+              {showResetConfirm ? (
+                <>
+                  <AlertTriangle className="h-4 w-4" />
+                  CONFERMA RESET
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4" />
+                  Reset Sistema
+                </>
+              )}
             </Button>
           </div>
         </div>
@@ -127,22 +229,60 @@ export function AdminInterface({ gameState, onGameStateChange }: AdminInterfaceP
           <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-emerald-50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-green-700">Cassa Attuale</CardTitle>
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <DollarSign className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleCashEdit}
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 text-green-600 hover:text-green-800"
+                >
+                  {isEditingCash ? <Save className="h-3 w-3" /> : <Edit3 className="h-3 w-3" />}
+                </Button>
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 text-white" />
+                </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">€{gameState.cashRegister.toFixed(2)}</div>
-              <div className="flex items-center gap-1 mt-1">
-                {gameState.cashRegister >= 0 ? (
-                  <ChevronUp className="h-4 w-4 text-green-500" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-red-500" />
-                )}
-                <p className="text-xs text-green-600">
-                  {gameState.cashRegister >= 0 ? 'In positivo' : 'In negativo'}
-                </p>
-              </div>
+              {isEditingCash ? (
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    value={newCashAmount}
+                    onChange={(e) => setNewCashAmount(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleCashEdit()}
+                    className="text-2xl font-bold h-12"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                  <div className="flex gap-1">
+                    <Button size="sm" onClick={handleCashEdit} className="flex-1">
+                      <Save className="h-3 w-3 mr-1" /> Salva
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => {
+                      setIsEditingCash(false)
+                      setNewCashAmount('')
+                    }}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-3xl font-bold text-green-600">€{gameState.cashRegister.toFixed(2)}</div>
+                  <div className="flex items-center gap-1 mt-1">
+                    {gameState.cashRegister >= 0 ? (
+                      <ChevronUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <p className="text-xs text-green-600">
+                      {gameState.cashRegister >= 0 ? 'In positivo' : 'In negativo'}
+                    </p>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

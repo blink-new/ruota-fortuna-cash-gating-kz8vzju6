@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { Button } from './components/ui/button'
 import { Card } from './components/ui/card'
 import { Badge } from './components/ui/badge'
-import { Settings, User, LogOut } from 'lucide-react'
+import { Settings, User, LogOut, Shield } from 'lucide-react'
 import { PlayerInterface } from './components/PlayerInterface'
 import { AdminInterface } from './components/AdminInterface'
+import { AdminAuth } from './components/AdminAuth'
 import { GameState } from './types/game'
 import { Toaster } from './components/ui/toaster'
 
@@ -18,8 +19,7 @@ function App() {
 
   const [isAdminMode, setIsAdminMode] = useState(false)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [adminPassword, setAdminPassword] = useState('')
-  const [showLogin, setShowLogin] = useState(false)
+  const [showAdminAuth, setShowAdminAuth] = useState(false)
 
   // Load game state from localStorage
   useEffect(() => {
@@ -38,71 +38,28 @@ function App() {
     localStorage.setItem('fortuneWheelGameState', JSON.stringify(gameState))
   }, [gameState])
 
-  const handleAdminLogin = () => {
-    // Simple password check - in production, use proper authentication
-    if (adminPassword === 'admin123') {
-      setIsAuthenticated(true)
-      setIsAdminMode(true)
-      setShowLogin(false)
-      setAdminPassword('')
-    } else {
-      alert('Password errata!')
-    }
+  const handleAdminAuthenticated = () => {
+    setIsAuthenticated(true)
+    setIsAdminMode(true)
+    setShowAdminAuth(false)
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
     setIsAdminMode(false)
-    setShowLogin(false)
+    setShowAdminAuth(false)
+    
+    // Clear admin session
+    localStorage.removeItem('admin_session_token')
   }
 
-  // Login Modal
-  if (showLogin && !isAuthenticated) {
+  // Admin Authentication Modal
+  if (showAdminAuth) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-        <Card 
-          className="w-full max-w-md p-6 bg-slate-800"
-          style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }}
-        >
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gold mb-2">🔐 Accesso Amministratore</h2>
-            <p className="text-slate-300">Inserisci la password per accedere al pannello admin</p>
-          </div>
-          
-          <div className="space-y-4">
-            <input
-              type="password"
-              placeholder="Password amministratore"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
-              className="w-full p-3 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-gold focus:outline-none"
-            />
-            
-            <div className="flex gap-3">
-              <Button 
-                onClick={handleAdminLogin}
-                className="flex-1 bg-gold hover:bg-gold/90 text-slate-900"
-              >
-                Accedi
-              </Button>
-              <Button 
-                onClick={() => setShowLogin(false)}
-                variant="outline"
-                className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-700"
-              >
-                Annulla
-              </Button>
-            </div>
-          </div>
-          
-          <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
-            <p className="text-xs text-slate-400 text-center">
-              💡 Password demo: <span className="font-mono text-gold">admin123</span>
-            </p>
-          </div>
-        </Card>
-      </div>
+      <AdminAuth 
+        onAuthenticated={handleAdminAuthenticated}
+        onCancel={() => setShowAdminAuth(false)}
+      />
     )
   }
 
@@ -146,13 +103,12 @@ function App() {
       {/* Admin Access Button */}
       <div className="fixed top-4 right-4 z-50">
         <Button
-          onClick={() => setShowLogin(true)}
+          onClick={() => setShowAdminAuth(true)}
           variant="outline"
           size="sm"
-          className="bg-slate-800/90 backdrop-blur-sm text-gold hover:bg-gold hover:text-slate-900"
-          style={{ borderColor: 'rgba(212, 175, 55, 0.2)', color: '#D4AF37' }}
+          className="bg-slate-800/90 backdrop-blur-sm border-blue-500/30 text-blue-400 hover:bg-blue-500 hover:text-white transition-all duration-200"
         >
-          <Settings className="h-4 w-4 mr-2" />
+          <Shield className="h-4 w-4 mr-2" />
           Admin
         </Button>
       </div>
